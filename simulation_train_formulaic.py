@@ -402,10 +402,10 @@ def run_loop(
         print(f"multiple_of not in config, use default value: {gpc.config.model.multiple_of}")
 
     min_comm_cost, msp_min_cost, fsp_min_cost, isp_min_cost = (
-        float("inf"),
-        float("inf"),
-        float("inf"),
-        float("inf"),
+        float("-inf"),
+        float("-inf"),
+        float("-inf"),
+        float("-inf"),
     )
     min_cost_solution, msp_min_solu, fsp_min_solu, isp_min_solu = None, None, None, None
 
@@ -501,7 +501,7 @@ micro_bsz: {micro_bsz}, pp: {pp}, wp: {wp}, zp: {zp}, sp: {sp}, {str(algo_type)}
                                 gpc.config.parallel["tensor"]["mode"] = str(algo_type)
                                 gpc.config.parallel["pipeline"]["size"] = pp
                                 gpc.config.parallel["weight"]["size"] = wp
-                                gpc.config.model_size = 7
+                                gpc.config.model_size = args.model_size
 
                                 gpc.config.data["micro_num"] = micro_num
                                 gpc.config.data["micro_bsz"] = micro_bsz
@@ -549,24 +549,29 @@ micro_bsz: {micro_bsz}, pp: {pp}, wp: {wp}, zp: {zp}, sp: {sp}, {str(algo_type)}
                                 )
                                 if solu is None:
                                     continue
-                                cost = solu.tgs
+                                cost = solu.tgs # positive
+                                print(f"")
                                 solutions_list.append(solu)
-                                if cost < min_comm_cost:
+                                if cost > min_comm_cost:
+                                    print(f"into comm cost, before is {min_comm_cost}, new is {cost}")
                                     min_comm_cost = cost
                                     min_cost_solution = solu
 
                                 print(f"solu: {solu}", flush=True)
 
                                 if algo_type == AlgoType.MSP:
-                                    if cost < msp_min_cost:
+                                    if cost > msp_min_cost:
+                                        print(f"into msp mode, before is {msp_min_cost}, new is {cost}")
                                         msp_min_cost = cost
                                         msp_min_solu = solu
                                 elif algo_type == AlgoType.FSP:
-                                    if cost < fsp_min_cost:
+                                    if cost > fsp_min_cost:
+                                        print(f"into fsp mode, before is {fsp_min_cost}, new is {cost}")
                                         fsp_min_cost = cost
                                         fsp_min_solu = solu
                                 elif algo_type == AlgoType.ISP:
-                                    if cost < isp_min_cost:
+                                    if cost > isp_min_cost:
+                                        print(f"into isp mode, before is {isp_min_cost}, new is {cost}")
                                         isp_min_cost = cost
                                         isp_min_solu = solu
 
