@@ -858,7 +858,7 @@ class ParallelContext(metaclass=SingletonMeta):
         else:
             stride = pg_group_ranks[1] - pg_group_ranks[0]
             if stride >= 8:
-                return 8
+                return 8 # return 8 mostly
             else:
                 return stride
 

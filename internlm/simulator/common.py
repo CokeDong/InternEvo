@@ -26,9 +26,10 @@ class AlgoType:
 
 
 class BW:
+    # adapt for each device
     IB = 100 * 1024**3
     A800_NVL = 150 * 1024**3  # 满速是 200 GB/s
-    A100_NVL = 250 * 1024**3  # 满速是 300 GB/s
+    A100_NVL = 250 * 1024**3  # 满速是 300 GB/s single-dir speed
 
 
 BENCH_TYPE_LIST = [CostType.ALL2ALL, CostType.ALLREDUCE, CostType.REDUCESCATTER, CostType.ALLGATHER, CostType.LINEAR]
@@ -53,8 +54,8 @@ GLOBAL_BYTE_SIZES_LIST = [1 * KB, 512 * KB, 1 * MB, 4 * MB, 32 * MB, 64 * MB, 12
 # GLOBAL_BYTE_SIZES_LIST = [64 * MB, 128 * MB]
 # GLOBAL_BYTE_SIZES_LIST = [512 * KB, 1 * MB, 4 * MB] # , 64 * MB, 128 * MB, 256 * MB]
 GLOBAL_ELEM_SIZES_LIST = [dsize // 2 for dsize in GLOBAL_BYTE_SIZES_LIST]
-WORLD_SIZE_LIST = [2, 4, 8, 16, 32, 64, 128]
-TP_SIZE_RANGE = [1] + list(range(2, 80 + 1, 2))
+WORLD_SIZE_LIST = [2, 4, 8, 16, 32, 64, 128] # not used
+TP_SIZE_RANGE = [1] + list(range(2, 80 + 1, 2)) # not used
 
 OUT_OF_MEM_LATENCY = 10**9
 

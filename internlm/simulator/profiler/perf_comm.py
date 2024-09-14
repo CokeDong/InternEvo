@@ -66,12 +66,16 @@ def new_process_group(world_size, gpus_per_node, intra_size, inter_size):
 
 
 def gen_perf():
+    # gpu_per_node here
+    gpus_per_node = 8
+    node_num = world_size // gpus_per_node
+
     if "RANK" not in os.environ:
         os.environ["RANK"] = os.environ["SLURM_PROCID"]
     if "WORLD_SIZE" not in os.environ:
         os.environ["WORLD_SIZE"] = os.environ["SLURM_NPROCS"]
     if "LOCAL_RANK" not in os.environ:
-        os.environ["LOCAL_RANK"] = str(int(os.environ["RANK"]) % 8)
+        os.environ["LOCAL_RANK"] = str(int(os.environ["RANK"]) % gpus_per_node)
     if "MASTER_ADDR" not in os.environ:
         os.environ["MASTER_ADDR"] = get_master_node()
     if "MASTER_PORT" not in os.environ:
@@ -83,8 +87,6 @@ def gen_perf():
     host = os.environ["MASTER_ADDR"]
     port = int(os.environ["MASTER_PORT"])
 
-    gpus_per_node = 8
-    node_num = world_size // gpus_per_node
     config = dict(
         parallel=dict(
             zero1=dict(size=1),
@@ -204,12 +206,12 @@ def init_cost_model(cost_model_path):
 
 def coll_algo_bw(comm_op, size, n):
     if comm_op == CostType.ALL2ALL:
-        if n <= 8:
+        if n <= 8: # hyperpara-8
             return size * (n - 1) / n
         else:
             # intra_parts = 8
             one_part = size / n
-            return 8 * one_part * (n - 8 / n)
+            return 8 * one_part * (n - 8 / n) # hyperpara-8
     elif comm_op == CostType.ALLREDUCE:
         return size * 2 * (n - 1) / n
     elif comm_op == CostType.REDUCESCATTER:
@@ -292,7 +294,7 @@ def draw_heatmap(comm_nums: int, comm_volume: int, parallel_mode, use_rail_optim
             if parallel_mode in [ParallelMode.TENSOR, ParallelMode.WEIGHT]:
                 _comm_volume = comm_volume * gpc.config.model["num_layers"]
             elif parallel_mode == ParallelMode.PIPELINE:
-                _comm_volume = 8 * 2 * comm_volume * comm_nums
+                _comm_volume = 8 * 2 * comm_volume * comm_nums # pp mode, why *8
             # elif parallel_mode == ParallelMode.ZERO1:
             #     _comm_volume = comm_volume * world_size
             else:
@@ -392,13 +394,14 @@ def get_comm_cost_from_logic(comm_volume: int, parallel_mode: ParallelMode, comm
     is_intra = gpc.check_pg_is_intra(parallel_mode)
     if not is_intra:
         num_partner = gpc.same_group_in_one_node(parallel_mode)
-        assert num_partner <= 8, f"num_partner: {num_partner}"
+        assert num_partner <= 8, f"num_partner: {num_partner}" # assert here
         if parallel_mode == ParallelMode.WEIGHT:
             assert num_partner == 1
         if parallel_mode == ParallelMode.TENSOR:
             assert num_partner == 1
         comm_volume *= num_partner
 
+    # change here
     bw = BW.A800_NVL if is_intra else (BW.IB / get_scale_ratio(scale))
     return coll_algo_bw(comm_op, comm_volume, scale) / bw  # 转换成ms小数点保留两位
 
