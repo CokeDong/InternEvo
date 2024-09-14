@@ -4,6 +4,7 @@ DO_ALERT = False
 SEQ_LEN = 2048
 HIDDEN_SIZE = 4096
 NUM_ATTENTION_HEAD = 32
+NUM_KV_ATTENTION_HEAD = 32
 MLP_RATIO = 4 / 3
 NUM_LAYER = 32
 VOCAB_SIZE = 103168
@@ -145,6 +146,7 @@ model = dict(
     dtype="torch.bfloat16",  # Support: "torch.float16", "torch.half", "torch.bfloat16", "torch.float32", "torch.tf32"
     norm_type="rmsnorm",
     layer_norm_epsilon=1e-5,
+    num_kv_attention_heads=NUM_KV_ATTENTION_HEAD,
     use_flash_attn=True,
     # Whether the odd and even columns of the query and key in the model are normally interleaved.
     # If it's True, the model's odd and even columns are normally ordered; if it's False,
