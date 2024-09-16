@@ -145,7 +145,7 @@ def gen_perf():
     intra_comm_nums = int(math.log(gpus_per_node)) + 1  # 0,1,2,3
     inter_comm_nums = int(math.log(node_num)) + 1
 
-    data_path = f"./prof_data"
+    data_path = f"/share/work/dongkaixing/InternEvo/prof_data"
     cal_pic_path = f"{data_path}/pics/cal"
     comm_pic_path = f"{data_path}/pics/comm"
 
