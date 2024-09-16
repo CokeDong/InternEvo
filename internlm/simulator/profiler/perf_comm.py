@@ -68,7 +68,7 @@ def new_process_group(world_size, gpus_per_node, intra_size, inter_size):
 def gen_perf():
     # gpu_per_node here
     gpus_per_node = 8
-    node_num = world_size // gpus_per_node
+    # node_num = world_size // gpus_per_node
 
     if "RANK" not in os.environ:
         os.environ["RANK"] = os.environ["SLURM_PROCID"]
@@ -86,7 +86,7 @@ def gen_perf():
     world_size = int(os.environ["WORLD_SIZE"])
     host = os.environ["MASTER_ADDR"]
     port = int(os.environ["MASTER_PORT"])
-
+    node_num = world_size // gpus_per_node
     config = dict(
         parallel=dict(
             zero1=dict(size=1),
@@ -457,3 +457,4 @@ broadcast = functools.partial(get_comm_cost, comm_op=CostType.BROADCAST)
 p2p = functools.partial(get_comm_cost, comm_op=CostType.P2P)
 alltoall = functools.partial(get_comm_cost, comm_op=CostType.ALL2ALL)
 allreduce = functools.partial(get_comm_cost, comm_op=CostType.ALLREDUCE)
+
