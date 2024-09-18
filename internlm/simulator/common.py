@@ -27,10 +27,14 @@ class AlgoType:
 
 class BW:
     # adapt for each device
-    IB = 100 * 1024**3
-    A800_NVL = 150 * 1024**3  # 满速是 200 GB/s
+    IB = 100 * 1024**3 # 100 Gbyte/s = 800 Gbps
+    A800_NVL = 150 * 1024**3  # 满速是 200 GB/s single-dir speed
     A100_NVL = 250 * 1024**3  # 满速是 300 GB/s single-dir speed
 
+class GMEM:
+    # adapt for each device
+    A800_MEM = 64 * 1024**3
+    A100_MEM = 80 * 1024**3 
 
 BENCH_TYPE_LIST = [CostType.ALL2ALL, CostType.ALLREDUCE, CostType.REDUCESCATTER, CostType.ALLGATHER, CostType.LINEAR]
 # BENCH_TYPE_LIST = [CostType.ALL2ALL, CostType.ALLREDUCE, CostType.REDUCESCATTER, CostType.ALLGATHER, CostType.LINEAR]
