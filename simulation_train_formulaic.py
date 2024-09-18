@@ -29,6 +29,7 @@ from internlm.simulator.formulas.mem import (
     get_p2p_buffer_size,
     get_rotary_emb_sincos_cache_mm,
 )
+from internlm.simulator.common import GMEM
 from internlm.simulator.formulas.overlap import TransformerOverlapOneLayer
 from internlm.simulator.profiler.perf_comm import (
     allreduce,
@@ -506,7 +507,7 @@ micro_bsz: {micro_bsz}, pp: {pp}, wp: {wp}, zp: {zp}, sp: {sp}, {str(algo_type)}
                                 gpc.config.data["micro_num"] = micro_num
                                 gpc.config.data["micro_bsz"] = micro_bsz
 
-                                gpc.config["mem_threshold"] = 80 * 1024**3
+                                gpc.config["mem_threshold"] = GMEM.A800_MEM
                                 gpc.config["wp_penalty_coefficient"] = 0.1
                                 gpc.config["dtype_size"] = 2
                                 gpc.config["fp32_ratio"] = 2
@@ -635,7 +636,7 @@ def run_single(world_size, global_bsz=4 * 1024 * 1024):
 
     gpc.config.data["global_bsz"] = global_bsz
     gpc.config.model_size = args.model_size
-    gpc.config["mem_threshold"] = 80 * 1024**3
+    gpc.config["mem_threshold"] = GMEM.A800_MEM # change here
     gpc.config["wp_penalty_coefficient"] = 0.1
     gpc.config["dtype_size"] = 2
     gpc.config["fp32_ratio"] = 2
