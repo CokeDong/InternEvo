@@ -306,6 +306,9 @@ os_mm_cost: {os_mm_cost/1024**3:.2f} GB, activation: {activation/1024**3:.2f} GB
     except KeyError as e:
         print(f"not found FA key: {e}", flush=True)
         return None
+    except RuntimeError as e:
+        print(f"not found FA key: {e}", flush=True)
+        return None
 
     if wp > 1:
         overlap_latency = min(comp_wp, wp_comm_cost) * gpc.config.wp_penalty_coefficient + max(comp_wp, wp_comm_cost)
@@ -506,6 +509,7 @@ micro_bsz: {micro_bsz}, pp: {pp}, wp: {wp}, zp: {zp}, sp: {sp}, {str(algo_type)}
 
                                 gpc.config.data["micro_num"] = micro_num
                                 gpc.config.data["micro_bsz"] = micro_bsz
+                                gpc.config.data._add_item("gradient_accumulation", gpc.config.data.micro_num)
 
                                 gpc.config["mem_threshold"] = GMEM.A800_MEM
                                 gpc.config["wp_penalty_coefficient"] = 0.1

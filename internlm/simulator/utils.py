@@ -117,6 +117,7 @@ class SPIter:
             self.num_list = [1] + list(range(2, stop + 1, 2))
         else:
             self.num_list = [1] + list(range(2, 8, 2)) + list(range(8, stop + 1, 8))
+            print(self.num_list )
 
     def __iter__(self):
         return iter(self.num_list)

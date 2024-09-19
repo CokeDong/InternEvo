@@ -439,7 +439,8 @@ def get_fa_cost(micro_bsz, seqlen, hidden_size, q_head, kv_head, dtype, is_fwd):
             t_fwd, t_bwd = run_fa_lat_test(micro_bsz, seqlen, hidden_size, q_head, kv_head, dtype=torch.bfloat16)
         except RuntimeError as e:
             print(f"{e}, fa run fail", flush=True)
-            t_fwd, t_bwd = float("inf"), float("inf")
+            # t_fwd, t_bwd = float("inf"), float("inf")
+            raise e
 
         fa_cost_cache[fa_key] = t_fwd, t_bwd
 
