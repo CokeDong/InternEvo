@@ -1,36 +1,36 @@
-JOB_NAME = "7b_qwen2_train"
-model_type = "QWEN2"
+JOB_NAME = "7b_train"
 DO_ALERT = False
 
-VOCAB_SIZE = 152064
-SEQ_LEN = 2048
-HIDDEN_SIZE = 3584
-NUM_ATTENTION_HEAD = 28
-NUM_KV_ATTENTION_HEAD = 4
-MLP_RATIO = 5.25
-NUM_LAYER = 28
+SEQ_LEN = 128*1024
+HIDDEN_SIZE = 8192
+NUM_ATTENTION_HEAD = 64
+NUM_KV_ATTENTION_HEAD = NUM_ATTENTION_HEAD
+MLP_RATIO = 3.5
+NUM_LAYER = 80
+VOCAB_SIZE = 32000
 
-
-MODEL_ONLY_FOLDER = "local:llm_ckpts_qwen2/xxxx/"
+MODEL_ONLY_FOLDER = "local:llm_ckpts/xxxx"
 # Ckpt folder format:
 # fs: 'local:/mnt/nfs/XXX'
-SAVE_CKPT_FOLDER = "local:llm_ckpts_qwen2"
+SAVE_CKPT_FOLDER = "local:llm_ckpts"
+LOAD_CKPT_FOLDER = "local:llm_ckpts/49"
 
 # boto3 Ckpt folder format:
 # import os
 # BOTO3_IP = os.environ["BOTO3_IP"] # boto3 bucket endpoint
 # SAVE_CKPT_FOLDER = f"boto3:s3://model_weights.{BOTO3_IP}/internlm"
+# LOAD_CKPT_FOLDER = f"boto3:s3://model_weights.{BOTO3_IP}/internlm/snapshot/1/"
 CHECKPOINT_EVERY = 50
 ckpt = dict(
     enable_save_ckpt=False,  # enable ckpt save.
-    enable_internevo2hf_ckpt=False, # enable ckpt save for huggingface format.
     save_ckpt_folder=SAVE_CKPT_FOLDER,  # Path to save training ckpt.
+    # load_ckpt_folder= dict(path=MODEL_ONLY_FOLDER, content=["model"], ckpt_type="normal"),
+    load_ckpt_folder="local:llm_ckpts/",
     # 'load_ckpt_info' setting guide:
     # 1. the 'path' indicate ckpt path,
     # 2. the 'content‘ means what states will be loaded, support: "model", "sampler", "optimizer", "scheduler", "all"
-    # 3. the ’ckpt_type‘ means the type of checkpoint to be loaded, support: "internevo", "hf", or other custom-defined
-    # load function such as "llama"
-    load_ckpt_info=dict(path=MODEL_ONLY_FOLDER, content=("model",), ckpt_type="hf"),
+    # 3. the ’ckpt_type‘ means the type of checkpoint to be loaded, support: "internevo", "llama", "hf_llama".
+    load_ckpt_info=dict(path=MODEL_ONLY_FOLDER, content=("model",), ckpt_type="internevo"),
     # 'auto_resume' is designed to automatically load the latest checkpoint from 'save_ckpt_folder' when encountering
     # training interruptions/hangs caused by hardware failures, using a scheduling system (such as k8s/slurm)
     # with an automatic restart mechanism upon training reboot.
@@ -38,27 +38,27 @@ ckpt = dict(
     # path specified in `load_ckpt_info` by default.
     # If you want to initialize your model weights from another model, you must set `auto_resume` to False.
     # If you want to train from scratch, please set `auto_resume` to False and 'load_ckpt_info' to None.
-    auto_resume=False,
+    auto_resume=True,
     checkpoint_every=CHECKPOINT_EVERY,
     async_upload=True,  # async ckpt upload. (only work for boto3 ckpt)
     async_upload_tmp_folder="/dev/shm/internlm_tmp_ckpt/",  # path for temporarily files during asynchronous upload.
     oss_snapshot_freq=int(CHECKPOINT_EVERY / 2),  # snapshot ckpt save frequency.
 )
 
-TRAIN_FOLDER = None
+TRAIN_FOLDER = None  # "/path/to/dataset"
 VALID_FOLDER = None  # "/path/to/dataset"
 data = dict(
     seq_len=SEQ_LEN,
     # micro_num means the number of micro_batch contained in one gradient update
     micro_num=4,
     # packed_length = micro_bsz * SEQ_LEN
-    micro_bsz=1,
+    micro_bsz=2,
     # defaults to the value of micro_num
     valid_micro_num=4,
     # defaults to 0, means disable evaluate
-    valid_every=0,
+    valid_every=50,
     pack_sample_into_one=False,
-    total_steps=20,
+    total_steps=50000,
     skip_batches="",
     # rampup_batch_size (str): A string with three space-separated integers representing the
     #       starting batch size, the increment, and the number of steps between
@@ -132,8 +132,7 @@ beta2_scheduler = dict(
 
 use_fp32_norm = False
 model = dict(
-    checkpoint=False,
-    num_chunks=1,
+    checkpoint=False,  # The proportion of layers for activation aheckpointing, the optional value are True/False/[0-1]
     num_attention_heads=NUM_ATTENTION_HEAD,
     num_kv_attention_heads=NUM_KV_ATTENTION_HEAD,
     embed_split_hidden=True,
@@ -142,14 +141,13 @@ model = dict(
     parallel_output=True,
     hidden_size=HIDDEN_SIZE,
     num_layers=NUM_LAYER,
-    qkv_bias=True,
-    o_bias=False,
     mlp_ratio=MLP_RATIO,
     apply_post_layer_norm=False,
-    dtype="torch.bfloat16",
+    dtype="torch.bfloat16",  # Support: "torch.float16", "torch.half", "torch.bfloat16", "torch.float32", "torch.tf32"
     norm_type="rmsnorm",
-    layer_norm_epsilon=1e-6,
+    layer_norm_epsilon=1e-5,
     use_flash_attn=True,
+    num_chunks=1,  # if num_chunks > 1, interleaved pipeline scheduler is used.
     # Whether the odd and even columns of the query and key in the model are normally interleaved.
     # If it's True, the model's odd and even columns are normally ordered; if it's False,
     # it means that the model has prematurely concatenated all odd columns and even columns in front
@@ -158,12 +156,7 @@ model = dict(
     # qk_interleaved = True: q[-1] = [q1,q2,q3,q4,q5,q6,...], k[-1] = [k1,k2,k3,k4,k5,k6,...]
     # qk_interleaved = False: q[-1] = [q1,q3,q5,...,q2,q4,q6,...], k[-1] = [k1,k3,k5,...,k2,k4,k6,...]
     qk_interleaved=False,
-    rope_base=1000000,
-    use_sliding_window=False,
-    sliding_window=32768,
-    max_window_layers=28,
 )
-
 """
 zero1 parallel (dict):
     1. size: int
@@ -191,9 +184,9 @@ weight parallel (dict):
 """
 parallel = dict(
     zero1=dict(size=-1),
-    tensor=dict(size=1, mode="mtp"),
+    tensor=dict(size=2, mode="isp"),
     pipeline=dict(size=1, interleaved_overlap=True),
-    weight=dict(size=1, overlap=True, memory_pool=True),
+    weight=dict(size=4, overlap=True, memory_pool=True),
 )
 
 cudnn_deterministic = False
@@ -215,18 +208,3 @@ monitor = dict(
 # metric_dtype can be "fp32" or other string
 # only when set to "fp32" will use fp32 to calc in metrics
 # metric_dtype = "fp32"
-
-generation = dict(
-    ckpt_folder="/path/to/saved/ckpt",
-    output_folder="/path/to/save/generation",
-    batch_size=1,
-    eos_id=[2, 0],
-    bos_id=1,
-    max_length=100,
-    do_sample=True,
-    temperature=1.0,
-    top_k=50,
-    top_p=1.0,
-    repetition_penalty=1,
-    length_penalty=1.0,
-)
