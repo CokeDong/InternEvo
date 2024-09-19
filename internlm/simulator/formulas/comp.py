@@ -10,15 +10,16 @@ def get_atten_cost_polynomial(complexity):
     return get_cal_cost(CostType.LINEAR, complexity)
 
 
-def get_atten_cost_predict(micro_bsz, seq_len, hidden_dim, q_head, kv_head, is_fwd):
+def get_atten_cost_predict(micro_bsz, seq_len, hidden_dim, q_head, kv_head, is_fwd, head_dim):
     """_summary_
 
     Args:
         micro_bsz (int): b
         seq_len (int): seqlen, 注意这里是完整的seqlen
-        hidden_dim (int): 原始的head_dim
+        hidden_dim (int): hidden_size
         num_heads (int): 原始的num_heads
         sp_tp (int): sp for isp, tp for msp/fsp
+        head_dim(int): 原始的head_dim
 
     Returns:
         int: latency of fa, unit is second.
@@ -31,6 +32,7 @@ def get_atten_cost_predict(micro_bsz, seq_len, hidden_dim, q_head, kv_head, is_f
         kv_head=kv_head,
         dtype=2,
         is_fwd=is_fwd,
+        head_dim=head_dim,
     )
     return predict
 
@@ -138,10 +140,11 @@ class TransformerComputation:
         """
         if self.use_fa:
             # 由于我们目前不支持搜索ring attn，所以这里我们sp/tp只切head数量
+            head_dim = self.h // self.a
             a = self.a // self.sp_scale
-            a_kv = self.a_kv // self.sp_scale
+            a_kv = self.a_kv // self.sp_scale           
 
-            total_latency = get_atten_cost_predict(self.b, self.s, self.h, a, a_kv, is_fwd)
+            total_latency = get_atten_cost_predict(self.b, self.s, self.h, a, a_kv, is_fwd, head_dim)
         else:
             # QK^T matrix multiplication
             # (b, s, h/sp) * (b, s, h/sp)^T

@@ -287,28 +287,23 @@ os_mm_cost: {os_mm_cost/1024**3:.2f} GB, activation: {activation/1024**3:.2f} GB
     # else:
     #     A[pp_i][sp_i][wp_i][zp_i] = mem_cost
 
-    try:
-        (wp_comm_cost, sp_comm_cost, comp_wp, comp_attn,) = TransformerOverlapOneLayer(
-            micro_bsz=micro_bsz,
-            sp_size=sp,
-            pp_size=pp,
-            world_size=world_size,
-            ckpt=activation_ckpt,
-            seq_len=gpc.config.data.seq_len,  # 这里需要传原始的seqlen,因为这个类里面还会切sp
-            vocab_size=gpc.config.model.vocab_size,
-            dtype_size=gpc.config.dtype_size,
-            hidden_dim=gpc.config.model.hidden_size,
-            num_head=gpc.config.model.num_attention_heads,
-            num_kv_head=gpc.config.model.num_kv_attention_heads,
-            mlp_ratio=gpc.config.model.mlp_ratio,
-            multiple_of=gpc.config.model.multiple_of,
-        )._get_overlap(algo_type)
-    except KeyError as e:
-        print(f"not found FA key: {e}", flush=True)
-        return None
-    except RuntimeError as e:
-        print(f"not found FA key: {e}", flush=True)
-        return None
+    (wp_comm_cost, sp_comm_cost, comp_wp, comp_attn,) = TransformerOverlapOneLayer(
+        micro_bsz=micro_bsz,
+        sp_size=sp,
+        pp_size=pp,
+        world_size=world_size,
+        ckpt=activation_ckpt,
+        seq_len=gpc.config.data.seq_len,  # 这里需要传原始的seqlen,因为这个类里面还会切sp
+        vocab_size=gpc.config.model.vocab_size,
+        dtype_size=gpc.config.dtype_size,
+        hidden_dim=gpc.config.model.hidden_size,
+        num_head=gpc.config.model.num_attention_heads,
+        num_kv_head=gpc.config.model.num_kv_attention_heads,
+        mlp_ratio=gpc.config.model.mlp_ratio,
+        multiple_of=gpc.config.model.multiple_of,
+    )._get_overlap(algo_type)
+    
+    
 
     if wp > 1:
         overlap_latency = min(comp_wp, wp_comm_cost) * gpc.config.wp_penalty_coefficient + max(comp_wp, wp_comm_cost)
