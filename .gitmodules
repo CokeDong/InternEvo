@@ -4,3 +4,6 @@
 [submodule "third_party/apex"]
 	path = third_party/apex
 	url = https://github.com/NVIDIA/apex
+[submodule "ditorch"]
+	path = ditorch
+	url = git@github.com:DeepLink-org/ditorch.git
