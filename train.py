@@ -11,7 +11,7 @@ from internlm.initialize import initialize_distributed_env
 from internlm.monitor import internevo_monitor
 from internlm.train import initialize_model
 from internlm.utils.common import parse_args
-
+import op_tools
 
 @internevo_monitor(feishu_alert=True, clean_run=True)
 def main(args):
@@ -31,6 +31,10 @@ def main(args):
     trainer = TrainerBuilder(model, train_dl, val_dls, **kwargs)
 
     # training
+    with op_tools.OpAutoCompare():
+    # with op_tools.OpTimeMeasure():
+        trainer.fit()
+  
     trainer.fit()
 
 
