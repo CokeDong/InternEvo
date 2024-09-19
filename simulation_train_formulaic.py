@@ -153,7 +153,7 @@ def cal_cost(
     one_layer_elem = cal_block_p_elem(
         gpc.config.model.hidden_size,
         q_head=gpc.config.model.num_attention_heads,
-        kv_head=gpc.config.model.num_kv_attention_heads,
+        kv_head=gpc.config.model.num_attention_heads,
         multiple_of=gpc.config.model.multiple_of,
         mlp_ratio=gpc.config.model.mlp_ratio,
     )
@@ -298,7 +298,7 @@ os_mm_cost: {os_mm_cost/1024**3:.2f} GB, activation: {activation/1024**3:.2f} GB
         dtype_size=gpc.config.dtype_size,
         hidden_dim=gpc.config.model.hidden_size,
         num_head=gpc.config.model.num_attention_heads,
-        num_kv_head=gpc.config.model.num_kv_attention_heads,
+        num_kv_head=gpc.config.model.num_attention_heads,
         mlp_ratio=gpc.config.model.mlp_ratio,
         multiple_of=gpc.config.model.multiple_of,
     )._get_overlap(algo_type)
@@ -409,7 +409,7 @@ def run_loop(
     min_cost_solution, msp_min_solu, fsp_min_solu, isp_min_solu = None, None, None, None
 
     L = gpc.config.model["num_layers"]
-    KV_H = gpc.config.model["num_kv_attention_heads"]
+    KV_H = gpc.config.model["num_attention_heads"]
     S = gpc.config.data["seq_len"]
     H = gpc.config.model["hidden_size"]
     MICRO_BSZ = gpc.config.data["micro_bsz"]
@@ -425,7 +425,7 @@ def run_loop(
     gpc.config["param_elements"] = cal_model_p_elem(
         h=gpc.config.model.hidden_size,
         q_head=gpc.config.model.num_attention_heads,
-        kv_head=gpc.config.model.num_kv_attention_heads,
+        kv_head=gpc.config.model.num_attention_heads,
         l=gpc.config.model.num_layers,
         vocab_size=gpc.config.model.vocab_size,
         mlp_ratio=gpc.config.model.mlp_ratio,
@@ -642,7 +642,7 @@ def run_single(world_size, global_bsz=4 * 1024 * 1024):
     gpc.config["param_elements"] = cal_model_p_elem(
         h=gpc.config.model.hidden_size,
         q_head=gpc.config.model.num_attention_heads,
-        kv_head=gpc.config.model.num_kv_attention_heads,
+        kv_head=gpc.config.model.num_attention_heads,
         l=gpc.config.model.num_layers,
         vocab_size=gpc.config.model.vocab_size,
         mlp_ratio=gpc.config.model.mlp_ratio,
