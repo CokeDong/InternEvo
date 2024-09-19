@@ -588,7 +588,7 @@ def run_warrper(world_size, global_bsz, config_path):
         print("--------------------- END -----------------------", flush=True)
         # print("Max TGS:", min_comm_cost * -1)
         for i, solu in enumerate(solutions_list):
-            if i > 5:
+            if i > 10:
                 break
             print(f"Top{i} Solution:", solu, flush=True)
 
