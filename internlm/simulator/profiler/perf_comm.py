@@ -430,13 +430,13 @@ def get_cal_cost(cal_op, flop):
         return flop / flops  # latency in second.
 
 
-def get_fa_cost(micro_bsz, seqlen, hidden_size, q_head, kv_head, dtype, is_fwd):
-    fa_key = f"{micro_bsz}_{seqlen}_{hidden_size}_{q_head}_{kv_head}"
+def get_fa_cost(micro_bsz, seqlen, hidden_size, q_head, kv_head, dtype, is_fwd, head_dim):
+    fa_key = f"{micro_bsz}_{seqlen}_{hidden_size}_{q_head}_{kv_head}_{head_dim}"
 
     if fa_key not in fa_cost_cache:
         print(f"not found FA key : {fa_key}, do profiling...")
         try:
-            t_fwd, t_bwd = run_fa_lat_test(micro_bsz, seqlen, hidden_size, q_head, kv_head, dtype=torch.bfloat16)
+            t_fwd, t_bwd = run_fa_lat_test(micro_bsz, seqlen, hidden_size, q_head, kv_head, head_dim, dtype=torch.bfloat16)
         except RuntimeError as e:
             print(f"{e}, fa run fail", flush=True)
             # t_fwd, t_bwd = float("inf"), float("inf")

@@ -9,7 +9,7 @@ from internlm.utils.common import get_current_device
 BENCH_TYPE = "flash_attn"
 
 
-def run_fa_lat_test(micro_bsz, seqlen, hidden_size, q_head, kv_head, dtype, warmups=2, trials=5):
+def run_fa_lat_test(micro_bsz, seqlen, hidden_size, q_head, kv_head, head_dim, dtype, warmups=2, trials=5):
     # 1, S, N, H
     def run():
         device = get_current_device()
@@ -17,13 +17,13 @@ def run_fa_lat_test(micro_bsz, seqlen, hidden_size, q_head, kv_head, dtype, warm
 
         tfwd, tbwd = Timer(True), Timer(True)
         q = torch.rand(
-            [micro_bsz * seqlen, q_head, hidden_size // q_head],
+            [micro_bsz * seqlen, q_head, head_dim],
             dtype=dtype,
             device=device,
             requires_grad=True,
         )
         kv = torch.rand(
-            [micro_bsz * seqlen, 2, kv_head, hidden_size // q_head],
+            [micro_bsz * seqlen, 2, kv_head, head_dim],
             dtype=dtype,
             device=device,
             requires_grad=True,
